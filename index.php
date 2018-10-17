@@ -115,7 +115,7 @@ else: ?>
                             formData.append('pin', el.dataset.pin);
                             formData.append('on', el.checked);
                             el.disabled = true;
-                            fetch('/', {
+                            fetch(location.href, {
                                 method: "POST",
                                 body: formData,
                             }).then(function(response) {

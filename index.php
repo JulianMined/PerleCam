@@ -1,10 +1,10 @@
 <?php 
-if($_POST['pin'] && $_POST['on']):
+if(isset($_POST['pin']) && isset($_POST['on'])):
 
     function setPinOut($pin, $val){
-        $val = boolval($val);
-        $pin = intval($pin);
-        shell_exec("/usr/local/bin/gpio -g write $pin $val");
+        $val = (int) filter_var($val, FILTER_VALIDATE_BOOLEAN);
+        $pin = (int) filter_var($pin, FILTER_VALIDATE_INT);
+        return system(escapeshellcmd("/usr/local/bin/gpio -g write $pin $val"));
     };
 
     echo setPinOut($_POST['pin'], $_POST['on']);
@@ -16,6 +16,7 @@ else: ?>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
             <title>Kamerasteuerung</title>
+            <script src="https://cdn.jsdelivr.net/npm/fetch-polyfill@0.8.2/fetch.min.js"></script>
             <style>
                 @font-face {
                     font-family: 'nokia';
@@ -27,11 +28,11 @@ else: ?>
                     height: 100%;
                 }
                 body {
-                    background: #202838;
+                    background: #8f97a8;
                     font-family: 'nokia';
                 }
                 header {
-                    background: #2c374f;
+                    background: #717a8e;
                     box-shadow: 0 0 4px #000;
                     display: flex;
                     justify-content: center;
@@ -54,9 +55,7 @@ else: ?>
                     opacity: 0;
                     width: 100%;
                     height: 100%;
-                }
-                .switch input:disabled ~ label + .icon, .switch input:disabled ~ label {
-                    opacity: .5;
+                    cursor: pointer;
                 }
                 .switch input ~ label + .icon {
                     height: 100px;
@@ -82,11 +81,11 @@ else: ?>
         </head>
         <body>
             <?php
-                shell_exec("/usr/local/bin/gpio -g mode 17 out");
-                shell_exec("/usr/local/bin/gpio -g mode 23 out");
+                system("/usr/local/bin/gpio -g mode 17 out");
+                system("/usr/local/bin/gpio -g mode 23 out");
 
                 function isPinOn($pin){
-                    return shell_exec("/usr/local/bin/gpio read $pin");
+                    return system("/usr/local/bin/gpio read $pin");
                 };
 
             ?>
@@ -106,9 +105,11 @@ else: ?>
                 </div>
             </div>
             <script>
-                document.querySelectorAll('input[type="checkbox"].toggle').forEach((el)=>{
-                    if(el.dataset.pin){
-                        el.addEventListener('change', ()=>{
+                const elems = document.querySelectorAll('input[type="checkbox"].toggle');
+                for(let i = 0; i < elems.length; i++){
+                    const el = elems[i];
+                    if(el && el.dataset.pin){
+                        el.addEventListener('change', function() {
                             console.log(el.dataset.pin, el.checked);
                             const formData = new FormData();
                             formData.append('pin', el.dataset.pin);
@@ -117,18 +118,17 @@ else: ?>
                             fetch('/', {
                                 method: "POST",
                                 body: formData,
-                            }).then(data => {
-                                console.log(data);
+                            }).then(function(response) {
                                 el.checked = el.checked;
                                 el.parentNode.querySelector('label b.state').textContent = el.checked ? 'an' : 'aus';
-                            }).catch(err => {
+                            }).catch(function(err) {
                                 el.checked = !el.checked;
-                            }).finally(()=>{
+                            }).finally(function() {
                                 el.disabled = false;
                             })
                         })
                     }
-                })
+                }
             </script>
         </body>
 </html>

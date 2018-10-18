@@ -1,18 +1,20 @@
 <?php 
 $gpio = '/usr/local/bin/gpio';
 
-shell_exec("$gpio -g mode 21 out");
+shell_exec("$gpio -g mode 17 out");
 shell_exec("$gpio -g mode 23 out");
 
 function isPinOn($pin){
+    global $gpio;
     return filter_var(shell_exec("$gpio -g read $pin"), FILTER_VALIDATE_BOOLEAN);
 };
 
 function setPinOut($pin, $val){
+    global $gpio;
     $val = (int) filter_var($val, FILTER_VALIDATE_BOOLEAN);
     $pin = (int) filter_var($pin, FILTER_VALIDATE_INT);
 
-    shell_exec(escapeshellcmd("$gpio -g write $pin $val"));
+    shell_exec("$gpio -g write $pin $val");
     $pinOn = isPinOn($pin);
     if($pinOn != $val){
         http_response_code(900);
@@ -99,8 +101,8 @@ else: ?>
             </header>
             <div class="switches">
                 <div class="switch">
-                    <input type="checkbox" class="toggle" data-pin="21">
-                    <label>Kamera 1 ist <b class="state"><?php echo isPinOn(21) ? "an" : "aus"?></b></label>
+                    <input type="checkbox" class="toggle" data-pin="17">
+                    <label>Kamera 1 ist <b class="state"><?php echo isPinOn(17) ? "an" : "aus"?></b></label>
                     <div class="icon"></div>
                 </div>
                 <div class="switch">

@@ -1,14 +1,27 @@
 <?php 
+system("/usr/local/bin/gpio -g mode 17 out");
+system("/usr/local/bin/gpio -g mode 23 out");
+
+function isPinOn($pin){
+    return filter_var(system("/usr/local/bin/gpio read $pin"), FILTER_VALIDATE_BOOLEAN);
+};
+
+function setPinOut($pin, $val){
+    $val = (int) filter_var($val, FILTER_VALIDATE_BOOLEAN);
+    $pin = (int) filter_var($pin, FILTER_VALIDATE_INT);
+
+    system(escapeshellcmd("/usr/local/bin/gpio -g write $pin $val"));
+
+    $pinOn = isPinOn($pin);
+    if($pinOn != $pin){
+        http_response_code(900);
+    }
+
+    return json_encode(['pin' => $pin, 'on' => $pinOn]);
+};
+
 if(isset($_POST['pin']) && isset($_POST['on'])):
-
-    function setPinOut($pin, $val){
-        $val = (int) filter_var($val, FILTER_VALIDATE_BOOLEAN);
-        $pin = (int) filter_var($pin, FILTER_VALIDATE_INT);
-        return system(escapeshellcmd("/usr/local/bin/gpio -g write $pin $val"));
-    };
-
     echo setPinOut($_POST['pin'], $_POST['on']);
-
 else: ?>
 <!DOCTYPE html>
     <html>
@@ -80,15 +93,6 @@ else: ?>
             </style>
         </head>
         <body>
-            <?php
-                system("/usr/local/bin/gpio -g mode 17 out");
-                system("/usr/local/bin/gpio -g mode 23 out");
-
-                function isPinOn($pin){
-                    return system("/usr/local/bin/gpio read $pin");
-                };
-
-            ?>
             <header>
                 <h2>Kamerasteuerung</h2>
             </header>
@@ -118,14 +122,28 @@ else: ?>
                             fetch(location.href, {
                                 method: "POST",
                                 body: formData,
-                            }).then(function(response) {
-                                el.checked = el.checked;
-                                el.parentNode.querySelector('label b.state').textContent = el.checked ? 'an' : 'aus';
-                            }).catch(function(err) {
-                                el.checked = !el.checked;
-                            }).finally(function() {
-                                el.disabled = false;
                             })
+                            .then(function(response) {
+                                if(response.status == 200){
+                                    return Promise.resolve(response);
+                                }else{
+                                    return Promise.reject('Leider ist bei der Anfrage ein Fehler aufgetreten.');
+                                }
+                            })
+                            .then(function(response){
+                                return response.json();
+                            })
+                            .then(function(json){
+                                console.log(json);
+                                el.checked = json.on;
+                            })
+                            .catch(function(err) {
+                                el.checked = !el.checked;
+                                alert(err);
+                            })
+                            .finally(function() {
+                                el.disabled = false;
+                            });
                         })
                     }
                 }

@@ -1,5 +1,5 @@
 <?php 
-$gpio = 'gpio'; //'/usr/local/bin/gpio';
+$gpio = '/usr/local/bin/gpio';
 
 /*
 shell_exec("$gpio -g mode (PIN) out");

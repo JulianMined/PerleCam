@@ -1,9 +1,7 @@
 <?php 
 $gpio = '/usr/local/bin/gpio';
-
-/*
-shell_exec("$gpio -g mode (PIN) out");
-*/
+shell_exec("$gpio -g mode 17 out");
+shell_exec("$gpio -g mode 23 out");
 
 function isPinOn($pin){
     global $gpio;
